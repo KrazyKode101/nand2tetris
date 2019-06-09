@@ -1,0 +1,55 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/DMux8Way.hdl
+
+/**
+ * 8-way demultiplexor:
+ * {a, b, c, d, e, f, g, h} = {in, 0, 0, 0, 0, 0, 0, 0} if sel == 000
+ *                            {0, in, 0, 0, 0, 0, 0, 0} if sel == 001
+ *                            etc.
+ *                            {0, 0, 0, 0, 0, 0, 0, in} if sel == 111
+ */
+
+CHIP DMux8Way {
+    IN in, sel[3];
+    OUT a, b, c, d, e, f, g, h;
+
+    PARTS:
+    // Put your code here:
+    Not(in=sel[0], out=Notsel0);
+    Not(in=sel[1], out=Notsel1);
+    Not(in=sel[2], out=Notsel2);
+
+    And(a=Notsel0, b=Notsel1, out=tchoosea);
+    And(a=tchoosea, b=Notsel2, out=choosea);
+    And(a=in, b=choosea, out=a);
+
+    And(a=sel[0], b=Notsel1, out=tchooseb);
+    And(a=tchooseb, b=Notsel2, out=chooseb);
+    And(a=in, b=chooseb, out=b);
+
+    And(a=Notsel0, b=sel[1], out=tchoosec);
+    And(a=tchoosec, b=Notsel2, out=choosec);
+    And(a=in, b=choosec, out=c);
+
+    And(a=sel[0], b=sel[1], out=tchoosed);
+    And(a=tchoosed, b=Notsel2, out=choosed);
+    And(a=in, b=choosed, out=d);
+
+    And(a=Notsel0, b=Notsel1, out=tchoosee);
+    And(a=tchoosee, b=sel[2], out=choosee);
+    And(a=in, b=choosee, out=e);
+
+    And(a=sel[0], b=Notsel1, out=tchoosef);
+    And(a=tchoosef, b=sel[2], out=choosef);
+    And(a=in, b=choosef, out=f);
+
+    And(a=Notsel0, b=sel[1], out=tchooseg);
+    And(a=tchooseg, b=sel[2], out=chooseg);
+    And(a=in, b=chooseg, out=g);
+
+    And(a=sel[0], b=sel[1], out=tchooseh);
+    And(a=tchooseh, b=sel[2], out=chooseh);
+    And(a=in, b=chooseh, out=h);
+}
