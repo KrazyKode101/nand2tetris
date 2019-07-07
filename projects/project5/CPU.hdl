@@ -6,9 +6,9 @@
 /**
  * The Hack CPU (Central Processing unit), consisting of an ALU,
  * two registers named A and D, and a program counter named PC.
- * The CPU is designed to fetch and execute instructions written in 
+ * The CPU is designed to fetch and execute instructions written in
  * the Hack machine language. In particular, functions as follows:
- * Executes the inputted instruction according to the Hack machine 
+ * Executes the inputted instruction according to the Hack machine
  * language specification. The D and A in the language specification
  * refer to CPU-resident registers, while M refers to the external
  * memory location addressed by A, i.e. to Memory[A]. The inM input 
@@ -34,10 +34,40 @@ CHIP CPU {
                          // the current program (reset==0).
 
     OUT outM[16],        // M value output
-        writeM,          // Write to M? 
+        writeM,          // Write to M?
         addressM[15],    // Address in data memory (of M)
         pc[15];          // address of next instruction
 
     PARTS:
     // Put your code here:
+
+    // A-reg
+    Mux16(a=instruction, b=outM1, sel=instruction[15], out=toStoreInA);
+    Mux(a=true, b=instruction[5], sel=instruction[15], out=modifyA);
+    ARegister(in=toStoreInA, load=modifyA, out=Aout, out[0..14]=addressM);
+
+    // get y
+    Mux(a=false, b=instruction[12], sel=instruction[15], out=AorM);
+    Mux16(a=Aout, b=inM, sel=AorM, out=y);
+
+    // store in D and get x
+    Mux(a=false, b=instruction[4], sel=instruction[15], out=modifyD);
+    DRegister(in=outM1, load=modifyD, out=x);
+
+    // compute f(x,y)
+    ALU(x=x, y=y, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outM, out=outM1, zr=zr, ng=ng);
+
+    // compute writeM
+    Mux(a=false, b=instruction[3], sel=instruction[15], out=writeM);
+
+    // compute pc
+    Or(a=ng, b=zr, out=ngorzr);
+    Not(in=ngorzr, out=gt);
+    And(a=instruction[2], b=ng, out=j1);
+    And(a=instruction[1], b=zr, out=j2);
+    And(a=instruction[0], b=gt, out=j3);
+    Or(a=j1, b=j2, out=temp);
+    Or(a=temp, b=j3, out=loadTemp);
+    Mux(a=false, b=loadTemp, sel=instruction[15], out=loadPC);
+    PC(in=Aout, load=loadPC, inc=true, reset=reset, out[0..14]=pc);
 }
